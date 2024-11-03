@@ -59,18 +59,18 @@ impl MatchStatus {
 pub struct Match {
     creator: StorageAddress,
     challenger: StorageAddress,
-    betAmount: StorageU256,
-    matchType: StorageU8,
+    bet_amount: StorageU256,
+    match_type: StorageU8,
     status: StorageU8,
-    creatorReady: StorageBool,
-    challengerReady: StorageBool,
-    creatorTeamId: StorageU256,
-    challengerTeamId: StorageU256,
+    creator_ready: StorageBool,
+    challenger_ready: StorageBool,
+    creator_team_id: StorageU256,
+    challenger_team_id: StorageU256,
 }
 
 #[storage]
 pub struct UserProfile {
-    inGameId: StorageString,
+    in_game_id: StorageString,
     email: StorageString,
 }
 
