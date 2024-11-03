@@ -1,12 +1,42 @@
 #![cfg_attr(not(feature = "export-abi"), no_main)]
 extern crate alloc;
 
+use alloy_sol_types::sol;
 use stylus_sdk::{
     alloy_primitives::{Address, U256},
     msg,
     prelude::*,
     storage::{StorageAddress, StorageBool, StorageString, StorageU256, StorageU8, StorageVec},
 };
+
+sol! {
+    event UserProfileCreated(address indexed user, string riotId);
+    event TeamCreated(uint256 indexed teamId, string name, address indexed owner);
+    event TeamMemberAdded(uint256 indexed teamId, address indexed member);
+    event TeamMemberRemoved(uint256 indexed teamId, address indexed member);
+    event MatchCreated(uint256 indexed matchId, address indexed creator, uint256 betAmount, uint8 matchType);
+    event MatchJoined(uint256 indexed matchId, address indexed challenger);
+    event PlayerReady(uint256 indexed matchId, address indexed player);
+    event MatchStarted(uint256 indexed matchId);
+    event MatchCompleted(uint256 indexed matchId, address indexed winner);
+    event MatchCancelled(uint256 indexed matchId);
+
+    error ProfileAlreadyExists();
+    error ProfileDoesNotExist();
+    error InvalidTeamId();
+    error NotTeamOwner();
+    error InvalidMatchId();
+    error NotParticipant();
+    error MatchNotOpen();
+    error MatchAlreadyHasChallenger();
+    error MatchNotReady();
+    error IncorrectBetAmount();
+    error AlreadyReady();
+    error MatchNotInProgress();
+    error InvalidWinner();
+    error OnlyCreatorCanCancel();
+    error CanOnlyCancelOpenOrReadyMatches();
+}
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum MatchType {
