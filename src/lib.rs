@@ -6,6 +6,7 @@ use alloy_sol_types::sol_data::Bool;
 use stylus_sdk::{
     alloy_primitives::{Address, U256, U8},
     alloy_sol_types::sol,
+    call::transfer_eth,
     evm, msg,
     prelude::*,
     storage::{StorageAddress, StorageMap, StorageString, StorageU256},
@@ -22,7 +23,7 @@ sol_storage! {
         uint8 status;
         bool creator_ready;
         bool challenger_ready;
-        mapping(address => string) user_profiles;
+        mapping(string => address) user_profiles;
     }
 }
 
@@ -66,13 +67,13 @@ impl MatchUpContract {
         self.challenger.set(Address::ZERO);
         self.creator_ready.set(false);
         self.challenger_ready.set(false);
-        self.user_profiles.setter(msg::sender()).set_str(username);
+        self.user_profiles.setter(username).set(msg::sender());
     }
 
     pub fn accept_match(&mut self, username: String) {
         self.challenger.set(msg::sender());
         self.challenger_ready.set(true);
-        self.user_profiles.setter(msg::sender()).set_str(username);
+        self.user_profiles.setter(username).set(msg::sender());
     }
 
     #[payable]
@@ -105,10 +106,14 @@ impl MatchUpContract {
         if self.status.get() == U8::from(MatchStatus::Cancelled as u8) {
             panic!("Match is cancelled");
         }
-        if msg::sender() == self.creator.get() {
-            evm::transfer(msg::sender(), self.bet_amount.get()).unwrap();
-        } else if msg::sender() == self.challenger.get() {
-            evm::transfer(msg::sender(), self.bet_amount.get()).unwrap();
-        }
+        transfer_eth(msg::sender(), self.bet_amount.get()).unwrap();
+    }
+
+    pub fn declare_winner(&mut self, username: String) {
+        transfer_eth(
+            self.user_profiles.get(username),
+            self.bet_amount.get() * U256::from(2),
+        )
+        .unwrap()
     }
 }
