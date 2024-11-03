@@ -2,8 +2,17 @@
 pragma solidity ^0.8.0;
 
 contract MatchUpContract {
-    enum MatchType { Individual, Team }
-    enum MatchStatus { Open, Ready, InProgress, Completed, Cancelled }
+    enum MatchType {
+        Individual,
+        Team
+    }
+    enum MatchStatus {
+        Open,
+        Ready,
+        InProgress,
+        Completed,
+        Cancelled
+    }
 
     struct UserProfile {
         string riotId;
@@ -25,7 +34,12 @@ contract MatchUpContract {
     uint256 public constant PLATFORM_FEE = 2; // 2% fee
 
     event UserProfileCreated(address user, string riotId);
-    event MatchCreated(uint256 matchId, address creator, uint256 betAmount, MatchType matchType);
+    event MatchCreated(
+        uint256 matchId,
+        address creator,
+        uint256 betAmount,
+        MatchType matchType
+    );
     event MatchJoined(uint256 matchId, address challenger);
     event PlayerReady(uint256 matchId, address player);
     event MatchStarted(uint256 matchId);
@@ -37,19 +51,29 @@ contract MatchUpContract {
     }
 
     modifier onlyParticipant(uint256 _matchId) {
-        require(msg.sender == matches[_matchId].creator || msg.sender == matches[_matchId].challenger, "Not a participant");
+        require(
+            msg.sender == matches[_matchId].creator ||
+                msg.sender == matches[_matchId].challenger,
+            "Not a participant"
+        );
         _;
     }
 
     function createUserProfile(string memory _riotId) external {
-        require(bytes(userProfiles[msg.sender].riotId).length == 0, "Profile already exists");
+        require(
+            bytes(userProfiles[msg.sender].riotId).length == 0,
+            "Profile already exists"
+        );
         userProfiles[msg.sender] = UserProfile(_riotId);
         emit UserProfileCreated(msg.sender, _riotId);
     }
 
     function createMatch(MatchType _matchType, uint256 _betAmount) external {
         require(_betAmount > 0, "Bet amount must be greater than 0");
-        require(bytes(userProfiles[msg.sender].riotId).length > 0, "Create a user profile first");
+        require(
+            bytes(userProfiles[msg.sender].riotId).length > 0,
+            "Create a user profile first"
+        );
 
         matchCount++;
         matches[matchCount] = Match({
@@ -67,8 +91,14 @@ contract MatchUpContract {
     function joinMatch(uint256 _matchId) external {
         Match storage game = matches[_matchId];
         require(game.status == MatchStatus.Open, "Match is not open");
-        require(game.challenger == address(0), "Match already has a challenger");
-        require(bytes(userProfiles[msg.sender].riotId).length > 0, "Create a user profile first");
+        require(
+            game.challenger == address(0),
+            "Match already has a challenger"
+        );
+        require(
+            bytes(userProfiles[msg.sender].riotId).length > 0,
+            "Create a user profile first"
+        );
 
         game.challenger = msg.sender;
         game.status = MatchStatus.Ready;
@@ -76,7 +106,9 @@ contract MatchUpContract {
         emit MatchJoined(_matchId, msg.sender);
     }
 
-    function readyUp(uint256 _matchId) external payable onlyParticipant(_matchId) {
+    function readyUp(
+        uint256 _matchId
+    ) external payable onlyParticipant(_matchId) {
         Match storage game = matches[_matchId];
         require(game.status == MatchStatus.Ready, "Match is not ready");
         require(msg.value == game.betAmount, "Incorrect bet amount");
@@ -97,10 +129,19 @@ contract MatchUpContract {
         }
     }
 
-    function declareWinner(uint256 _matchId, address _winner) external onlyParticipant(_matchId) {
+    function declareWinner(
+        uint256 _matchId,
+        address _winner
+    ) external onlyParticipant(_matchId) {
         Match storage game = matches[_matchId];
-        require(game.status == MatchStatus.InProgress, "Match is not in progress");
-        require(_winner == game.creator || _winner == game.challenger, "Invalid winner");
+        require(
+            game.status == MatchStatus.InProgress,
+            "Match is not in progress"
+        );
+        require(
+            _winner == game.creator || _winner == game.challenger,
+            "Invalid winner"
+        );
 
         game.status = MatchStatus.Completed;
 
@@ -117,7 +158,10 @@ contract MatchUpContract {
     function cancelMatch(uint256 _matchId) external {
         Match storage game = matches[_matchId];
         require(msg.sender == game.creator, "Only creator can cancel");
-        require(game.status == MatchStatus.Open || game.status == MatchStatus.Ready, "Can only cancel open or ready matches");
+        require(
+            game.status == MatchStatus.Open || game.status == MatchStatus.Ready,
+            "Can only cancel open or ready matches"
+        );
 
         game.status = MatchStatus.Cancelled;
 
@@ -135,7 +179,9 @@ contract MatchUpContract {
         return matches[_matchId];
     }
 
-    function getUserProfile(address _user) external view returns (UserProfile memory) {
+    function getUserProfile(
+        address _user
+    ) external view returns (UserProfile memory) {
         return userProfiles[_user];
     }
 }
