@@ -5,43 +5,81 @@ use stylus_sdk::{
     alloy_primitives::{Address, U256},
     msg,
     prelude::*,
+    storage::{StorageAddress, StorageBool, StorageString, StorageU256, StorageU8, StorageVec},
 };
 
-sol_storage! {
-    #[entrypoint]
-    pub struct VisitorBook {
-        address[] visitors;
-        mapping(address => bool) has_visited;
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum MatchType {
+    Individual,
+    Team,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum MatchStatus {
+    Open,
+    Ready,
+    InProgress,
+    Completed,
+    Cancelled,
+}
+
+impl MatchType {
+    pub fn to_u8(self) -> u8 {
+        self as u8
     }
+
+    pub fn from_u8(value: u8) -> Option<MatchType> {
+        match value {
+            0 => Some(MatchType::Individual),
+            1 => Some(MatchType::Team),
+            _ => None,
+        }
+    }
+}
+
+impl MatchStatus {
+    pub fn to_u8(self) -> u8 {
+        self as u8
+    }
+
+    pub fn from_u8(value: u8) -> Option<MatchStatus> {
+        match value {
+            0 => Some(MatchStatus::Open),
+            1 => Some(MatchStatus::Ready),
+            2 => Some(MatchStatus::InProgress),
+            3 => Some(MatchStatus::Completed),
+            4 => Some(MatchStatus::Cancelled),
+            _ => None,
+        }
+    }
+}
+
+#[storage]
+#[entrypoint]
+pub struct Match {
+    creator: StorageAddress,
+    challenger: StorageAddress,
+    betAmount: StorageU256,
+    matchType: StorageU8,
+    status: StorageU8,
+    creatorReady: StorageBool,
+    challengerReady: StorageBool,
+    creatorTeamId: StorageU256,
+    challengerTeamId: StorageU256,
+}
+
+#[storage]
+pub struct UserProfile {
+    inGameId: StorageString,
+    email: StorageString,
+}
+
+#[storage]
+pub struct Team {
+    name: StorageString,
+    members: StorageVec<StorageAddress>,
+    owner: StorageAddress,
 }
 
 #[public]
-impl VisitorBook {
-    // Function to record a new visitor
-    pub fn sign_guestbook(&mut self) {
-        let visitor = msg::sender();
-
-        // Check if the address has already visited
-        if !self.has_visited.get(visitor) {
-            // Add to visitors array
-            self.visitors.push(visitor);
-            // Mark as visited
-            self.has_visited.setter(visitor).set(true);
-        }
-    }
-
-    // Get total number of unique visitors
-    pub fn get_total_visitors(&self) -> U256 {
-        U256::from(self.visitors.len())
-    }
-
-    // Get visitor at specific index
-    pub fn get_visitor_at_index(&self, index: U256) -> Address {
-        self.visitors.get(index).unwrap()
-    }
-
-    // Check if an address has visited
-    pub fn has_address_visited(&self, address: Address) -> bool {
-        self.has_visited.get(address)
-    }
-}
+impl Match {}
